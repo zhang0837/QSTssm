@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qst.mapper.UserMapper">
+	<!-- 根据id查询新闻信息 -->
+	<select id="getUserList" parameterType="Integer" resultType="News">
+		select * from News
+		<where>
+			<if test="id != null and id != 0" >
+				id= #{id}
+			</if>
+
+		</where>
+	</select>
+
+	<insert id="insertNews" parameterType="News">
+		insert into
+		News(title,content,author)values(#{title},#{content},#{author})
+	</insert>
+
+	<delete id="deleteNewsById" parameterType="Integer">
+		delete from News where
+		id=#{id}
+	</delete>
+	
+	<update id="updateNews" parameterType="News">
+        update News set title=#{title},content=#{content},author=#{author} where id=#{id}
+    </update>
+	
+</mapper>
