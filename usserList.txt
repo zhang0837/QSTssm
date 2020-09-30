@@ -1,0 +1,237 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>用户列表页面</title>
+<!--     获取根目录 -->
+<%
+	pageContext.setAttribute("APP_PATH", request.getContextPath());
+%>
+<!-- 指定jQuery框架js包所在的路径 -->
+<script type="text/javascript" src="${APP_PATH }/js/jquery-3.2.1.js"></script>
+
+
+</head>
+<body>
+	<!-- 两个按钮点击时会触发响应事件 -->
+	<input type="button" value="添加用户界面" onclick="showAddUserWindow()" />
+	<input type="button" value="编辑用户界面" onclick="showEditUserWindow()" />
+	<hr />
+	<!-- form表单的基础样式，内部的内容将会动态加载 -->
+	<form>
+		<table border="1">
+			<thead>
+				<tr>
+					<th>选择</th>
+					<th>ID</th>
+					<th>标题</th>
+					<th>内容</th>
+					<th>作者</th>
+					<th>操作</th>
+				</tr>
+			</thead>
+			<tbody id="userList"></tbody>
+		</table>
+	</form>
+	<hr />
+	<div id="addUserDiv" style="display: none">
+		<form id="addUserForm">
+			<table>
+				<caption>添加用户界面</caption>
+				<tr>
+					<td>标题</td>
+					<td><input type="text" name="title" value="23"></td>
+				</tr>
+				<tr>
+					<td>内容</td>
+					<td><input type="text" name="content" value="23"></td>
+				</tr>
+				<tr>
+					<td>作者</td>
+					<td><input type="text" name="author" value="23"></td>
+				</tr>
+				<tr>
+					<td colspan="2"><input type="button" value="添加用户" id="addUser"></td>
+				</tr>
+			</table>
+		</form>
+	</div>
+	<div id="editUserDiv" style="display: none">
+		<form id="editUserForm">
+			<table>
+				<caption>编辑用户界面</caption>
+				<tr>
+					<td>ID</td>
+					<td><input type="text" name="id" id="id" readonly
+						style="background: lightgray"></td>
+				</tr>
+				<tr>
+					<td>标题</td>
+					<td><input type="text" name="title" id="title"></td>
+				</tr>
+				<tr>
+					<td>内容</td>
+					<td><input type="text" name="content" id="content"></td>
+				</tr>
+				<tr>
+					<td>作者</td>
+					<td><input type="text" name="author" id="author"></td>
+				</tr>
+				<tr>
+					<td colspan="2"><input type="button" value="更新用户"
+						id="editUser"></td>
+				</tr>
+			</table>
+		</form>
+	</div>
+
+	<script>
+		/* 预加载  页面加载完成后将会执行该$符号里面的内容，该内容为一个方法*/
+		$(function() {
+			getUserList();
+		});
+		//预加载后执行的代码
+		function getUserList() {
+			//将id值为userList的内容清空
+			$("#userList").empty();
+			//执行ajax请求
+			$
+					.ajax({
+						url : "${APP_PATH}/news",
+						type : "GET",
+						dataType : "json",
+						success : function(data) {
+							//$.each()例遍方法,data为需要遍历的对象或数组，function为每个成员/元素执行的回调函数
+							//使用该方法将会遍历data对象并同时使用元素索引和内容
+							$.each(
+											data,
+											function(index, user) {
+												//标签变量化，将标签转化为变量方便后面往表格中追加内容
+												var userRow = $("<tr></tr>");
+												var selectCell = $("<td><input type='checkbox' value='"+user.id+"'/></td>")
+												//.append（）将括号中的内容追加到该标签中
+												var idCell = $("<td></td>")
+														.append(user.id);
+												var userNameCell = $(
+														"<td></td>").append(
+														user.title);
+												var userPwdCell = $("<td></td>")
+														.append(user.content);
+												var ageCell = $("<td></td>")
+														.append(user.author);
+												//$().attr 为所有匹配的元素设置一个属性值
+												var editButton = $(
+														"<input type='button' value='编辑' class='editClass'/>")
+														.attr("edit-id",user.id);
+												var deleteButton = $(
+														"<input type='button' value='删除' class='deleteClass'/>")
+														.attr("edit-id",
+																user.id);
+												var opCell = $("<td></td>")
+														.append(editButton)
+														.append(deleteButton);
+												
+												//往行中追加列
+												userRow.append(selectCell)
+														.append(idCell).append(serNameCell)
+														.append(userPwdCell)
+														.append(ageCell)
+														.append(opCell);
+												//往id为userList的控件中追加行
+												$("#userList").append(userRow);
+
+											});
+
+						}
+					});
+		}
+		//删除用户操作
+		$(document).on("click", ".deleteClass", function() {
+			var userId = $(this).attr("edit-id");
+			$.ajax({
+				url : "${APP_PATH}/news/" + userId,
+				type : "DELETE",
+				dataType : "json",
+				success : function(data) {
+					alert(data.msg);
+					getUserList();
+				}
+			});
+		});
+		//更新用户信息
+		//当class值为editClass（编辑）的按钮被点击时将会执行function方法，该方法无方法名
+		$(document).on(
+				"click",
+				".editClass",
+				function() {
+					var userId = $(this).attr("edit-id");
+					//取消所有的复选框
+					$(this).parents("table").find("input[type=checkbox]").prop(
+							"checked", false);
+					//选中当前行的复选框
+					$(this).parents("tr").find("input").prop("checked", true);
+					$.ajax({
+						url : "${APP_PATH}/news/" + userId,
+						type : "GET",
+						dataType : "json",
+						success : function(data) {
+							$("#addUserDiv").css("display", "none");
+							$("#editUserDiv").css("display", "block");
+
+							$("#id").val(data.news.id);
+							$("#title").val(data.news.title);
+							$("#content").val(data.news.content);
+							$("#author").val(data.news.author);
+						}
+					});
+				});
+		//添加用户操作，当点击id值为addUser的按钮时，会执行以下方法，以及方法体中的ajax请求 
+		$("#addUser").click(function() {
+			$.ajax({
+				url : "${APP_PATH}/news/",//请求的映射路径
+				type : "POST",//请求发送方式
+				data : $("#addUserForm").serialize(),//发送的请求包含的内容（此处为将表单序列），此处不是JSON数据，在Controller中不能使用@RequestBody进行转换
+				//请求执行成功后的回调方法
+				success : function(data) {
+					alert(data.msg);
+					getUserList();
+				}
+			});
+		});
+		//编辑用户操作
+		$("#editUser").click(function() {
+			$.ajax({
+				url : "${APP_PATH}/news/",
+				type : "PUT",
+				data : $("#editUserForm").serialize(),
+				success : function(data) {
+					alert(data.msg);
+					getUserList();
+				}
+			});
+		});
+		/* 当点击添加用户按钮时会执行该方法 */
+		function showAddUserWindow() {
+			/* 如果id值为 addUserDiv的div块的csss属性display的值为none时，则修改该div块的display属性为block。实现添加用户的div块由隐藏状态转为显示状态*/
+			if ($("#addUserDiv").css("display") == "none") {
+				$("#addUserDiv").css("display", "block");
+				/* 不然的话就使该div块由显示状态变为隐藏状态  */
+			} else {
+				$("#addUserDiv").css("display", "none");
+			}
+			$("#editUserDiv").css("display", "none");
+		}
+		/* 效果同上 */
+		function showEditUserWindow() {
+			if ($("#editUserDiv").css("display") == "none") {
+				$("#editUserDiv").css("display", "block");
+			} else {
+				$("#editUserDiv").css("display", "none");
+			}
+			$("#addUserDiv").css("display", "none");
+		}
+	</script>
+</body>
+</html>
